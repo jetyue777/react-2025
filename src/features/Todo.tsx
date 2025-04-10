@@ -1,91 +1,77 @@
-import { useEffect } from "react";
+// src/features/todos/Todo.tsx
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
-  Button,
   CircularProgress,
   Divider,
-  Typography,
-} from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import styles from "./Todo.module.scss";
-
-import { ApiStatus } from "../../shared/models/todo.interface";
-import { deleteTodo, LoadTodos } from "../../store/actions/todoActions";
-import { IState, ITodoItem } from "../../store/types";
-import TodoForm from "./TodoForm/TodoForm";
-import TodoList from "./TodoList/TodoList";
-import TodoItemDetail from "./TodoItemDetail/TodoItemDetail";
+  Typography
+} from '@mui/material';
+import { todoActions } from './todoSlice';
+import { ApiStatus } from './types';
+import { RootState } from '../../store/rootReducer';
+import TodoForm from './TodoForm';
+import TodoList from './TodoList';
+import TodoItemDetail from './TodoItemDetail';
+import styles from './Todo.module.scss';
 
 const Todo = () => {
   const dispatch = useDispatch();
 
-  const loadingStatus = useSelector(
-    (state: IState) => state.todos.loadingStatus
-  );
-  const loadItemStatus = useSelector(
-    (state: IState) => state.todos.loadItemStatus
-  );
-  const todoItem = useSelector(
-    (state: IState): ITodoItem | undefined => state.todos.todoItem
-  );
+  const loadingStatus = useSelector((state: RootState) => state.todos.loadingStatus);
+  const loadItemStatus = useSelector((state: RootState) => state.todos.loadItemStatus);
+  const todoItem = useSelector((state: RootState) => state.todos.todoItem);
 
   useEffect(() => {
-    dispatch(LoadTodos());
+    // Load todos when component mounts
+    dispatch(todoActions.loadTodos());
   }, [dispatch]);
 
-  const handleDelete = (id: string) => {
-    dispatch(deleteTodo(id));
+  const handleDeleteTodo = (id: string) => {
+    dispatch(todoActions.deleteTodo(id));
   };
 
-  const renderItemDetail = () => {
-    if (loadItemStatus === ApiStatus.LOADING) {
-      return (
-        <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-          <CircularProgress />
-        </Box>
-      );
-    }
+  let itemDetail;
 
-    if (loadItemStatus === ApiStatus.LOADED && todoItem) {
-      return (
-        <TodoItemDetail todoItem={todoItem} onDeleteTodo={handleDelete} />
-      );
-    }
-
-    if (loadItemStatus === ApiStatus.LOADED && !todoItem) {
-      return (
-        <Typography variant="h6" component="div">
-          Please select a Todo from the list to view.
-        </Typography>
-      );
-    }
-
-    return null;
-  };
+  if (loadItemStatus === ApiStatus.LOADED && !todoItem) {
+    itemDetail = (
+      <Typography variant="h5" component="div">
+        Please select a Todo from list to view.
+      </Typography>
+    );
+  } else if (loadItemStatus === ApiStatus.LOADING) {
+    itemDetail = (
+      <Box sx={{ display: 'flex' }}>
+        <CircularProgress />
+      </Box>
+    );
+  } else if (loadItemStatus === ApiStatus.LOADED && todoItem) {
+    itemDetail = (
+      <TodoItemDetail
+        todoItem={todoItem}
+        onDeleteTodo={handleDeleteTodo}
+        deletingIds={useSelector((state: RootState) => state.todos.deletingIds)}
+      />
+    );
+  }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.content}>
         <TodoForm />
-
         <Divider className={styles.divider} />
-
         <div>
           {loadingStatus === ApiStatus.LOADING && <CircularProgress />}
-
-          {loadingStatus === ApiStatus.LOADED && (
-            <TodoList onDeleteTodo={handleDelete} />
-          )}
-
+          {loadingStatus === ApiStatus.LOADED && <TodoList onDeleteTodo={handleDeleteTodo} />}
           {loadingStatus === ApiStatus.FAILED && (
-            <Typography color="error">Failed to load todos.</Typography>
+            <Typography color="error">Failed to load todos</Typography>
           )}
         </div>
       </div>
-
-      <Divider orientation="vertical" flexItem sx={{ mx: 5 }} />
-
-      <div>{renderItemDetail()}</div>
+      <Divider orientation="vertical" variant="middle" flexItem sx={{ mx: 3 }} />
+      <div>
+        {itemDetail}
+      </div>
     </div>
   );
 };
