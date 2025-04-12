@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { todoApi } from '../api/todoApi';
+import { todoService } from '../api/todoService';
 import { TodoItem } from '../models/todo.interface';
 import { useTodoStore } from '../store/todoStore';
 
@@ -13,14 +13,14 @@ export const todoKeys = {
 export const useTodos = () => {
   return useQuery({
     queryKey: todoKeys.lists(),
-    queryFn: todoApi.fetchTodos,
+    queryFn: todoService.fetchTodos,
   });
 };
 
 export const useTodoItem = (id: string) => {
   return useQuery({
     queryKey: todoKeys.detail(id),
-    queryFn: () => todoApi.fetchTodoItem(id),
+    queryFn: () => todoService.fetchTodoItem(id),
     enabled: !!id,
   });
 };
@@ -29,7 +29,7 @@ export const useAddTodo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: todoApi.createTodo,
+    mutationFn: todoService.createTodo,
     onSuccess: (newTodo) => {
       queryClient.setQueryData<TodoItem[]>(
         todoKeys.lists(),
@@ -44,7 +44,7 @@ export const useDeleteTodo = () => {
   const { addDeletingId, removeDeletingId, selectedTodoId, setSelectedTodoId } = useTodoStore();
 
   return useMutation({
-    mutationFn: todoApi.deleteTodo,
+    mutationFn: todoService.deleteTodo,
 
     onMutate: async (deletedId) => {
       addDeletingId(deletedId);
