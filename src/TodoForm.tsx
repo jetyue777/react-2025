@@ -1,11 +1,16 @@
-import { ChangeEvent, useState } from 'react';
-import { Button, TextField } from '@mui/material';
-import styles from './TodoForm.module.scss';
-import { useAddTodo } from '../../hooks/useTodoQueries';
+// src/features/todos/TodoForm.tsx
+import { ChangeEvent, useState } from "react";
+import { Button, TextField } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import styles from "./TodoForm.module.scss";
+import { useAddTodoMutation } from "../../../api/todoApi";
 
 const TodoForm = () => {
-  const [description, setDescription] = useState('');
-  const addTodoMutation = useAddTodo();
+  // Local state for the input field
+  const [description, setDescription] = useState("");
+
+  // RTK Query mutation hook
+  const [addTodo, { isLoading }] = useAddTodoMutation();
 
   const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
@@ -13,11 +18,9 @@ const TodoForm = () => {
 
   const handleAddTodo = () => {
     if (description.trim()) {
-      addTodoMutation.mutate(description, {
-        onSuccess: () => {
-          setDescription('');
-        }
-      });
+      // Use RTK Query mutation
+      addTodo(description);
+      setDescription(""); // Clear input after adding
     }
   };
 
@@ -26,7 +29,7 @@ const TodoForm = () => {
       <TextField
         multiline
         placeholder="Enter todo message"
-        rows={5}
+        rows={3}
         variant="outlined"
         onChange={handleDescriptionChange}
         value={description}
@@ -38,10 +41,10 @@ const TodoForm = () => {
         variant="outlined"
         onClick={handleAddTodo}
         fullWidth
-        disabled={addTodoMutation.isPending}
-        LoadingPosition="start"
+        disabled={isLoading}
+        startIcon={<AddIcon />}
       >
-        {addTodoMutation.isPending ? 'Adding...' : 'Add Todo'}
+        Add Todo
       </Button>
     </div>
   );

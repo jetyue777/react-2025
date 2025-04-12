@@ -1,24 +1,21 @@
-import React from 'react';
-import { Button, Card, CardActions, CardContent, CardMedia, Typography } from '@mui/material';
-import { TodoItem } from '../../models/todo.interface';
-import todoImage from '../../assets/messy-pencils.jpg';
-import { useTodoStore } from '../../store/todoStore';
-import { useDeleteTodo } from '../../hooks/useTodoQueries';
+// src/features/todos/TodoItemDetail/TodoItemDetail.tsx
+import React from "react";
+import { Button, Card, CardActions, CardContent, CardMedia, Typography } from "@mui/material";
+import { TodoItem } from "../../../shared/models/todo.interface";
+import todoImage from "../../../assets/messy-pencils.jpg";
+import { useDeleteTodoMutation } from "../../../api/todoApi";
 
 interface TodoItemDetailProps {
   todoItem: TodoItem;
 }
 
 const TodoItemDetail: React.FC<TodoItemDetailProps> = ({ todoItem }) => {
-  const { deletingIds } = useTodoStore();
-  const deleteTodoMutation = useDeleteTodo();
+  const [deleteTodo, { isLoading: isDeleting }] = useDeleteTodoMutation();
 
   const handleDelete = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    deleteTodoMutation.mutate(todoItem.id);
+    deleteTodo(todoItem.id);
   };
-
-  const isDeleting = deletingIds.includes(todoItem.id);
 
   return (
     <Card sx={{ maxWidth: 345 }}>
@@ -36,9 +33,7 @@ const TodoItemDetail: React.FC<TodoItemDetailProps> = ({ todoItem }) => {
           {todoItem.id}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aspernatur et commodi deleniti, dismissimos
-          aliquam eveniet ex provident tenetur. Atque commodi deserunt ipsa obcaecati quos reprehenderit sed sequi
-          vero!
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aspernatur et commodi deleniti, dignissimos ea verol
         </Typography>
       </CardContent>
       <CardActions>
@@ -48,7 +43,7 @@ const TodoItemDetail: React.FC<TodoItemDetailProps> = ({ todoItem }) => {
           variant="outlined"
           loading={isDeleting}
           onClick={handleDelete}
-          loadingPosition="start"
+          LoadingPosition="start"
         >
           Remove
         </Button>

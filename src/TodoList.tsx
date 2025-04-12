@@ -1,21 +1,27 @@
-import React from 'react';
-import { Box, Button, Card, CardActionArea, CardContent, Typography } from '@mui/material';
-import { TodoItem } from '../../models/todo.interface';
-import { useTodoStore } from '../../store/todoStore';
-import { useTodos, useTodoItem, useDeleteTodo } from '../../hooks/useTodoQueries';
+// src/features/todos/TodoList/TodoList.tsx
+import React from "react";
+import { Box, Button, Card, CardActionArea, CardContent, Typography } from "@mui/material";
+import { TodoItem } from "../../../shared/models/todo.interface";
+import { useAppDispatch } from "../../../shared/hooks/hooks";
+import { useGetTodosQuery, useDeleteTodoMutation } from "../../../api/todoApi";
+import { setSelectedTodoId } from "../../../store/todoSlice";
 
 interface TodoListProps {
   onDeleteTodo: (id: string) => void;
 }
 
 const TodoList: React.FC<TodoListProps> = ({ onDeleteTodo }) => {
-  const { data: todos = [], isLoading } = useTodos();
-  const { setSelectedTodoId, deletingIds } = useTodoStore();
-  const deleteTodoMutation = useDeleteTodo();
+  const dispatch = useAppDispatch();
+
+  // Use RTK Query hooks
+  const { data: todos = [], isLoading } = useGetTodosQuery();
+  const [deleteTodo, { isLoading: isDeleting }] = useDeleteTodoMutation();
 
   const handleClickTodo = (id: string) => {
     console.log(id);
-    setSelectedTodoId(id);
+    if (id) {
+      dispatch(setSelectedTodoId(id));
+    }
   };
 
   const handleDeleteTodo = (event: React.MouseEvent<HTMLButtonElement>, id: string) => {
@@ -27,8 +33,8 @@ const TodoList: React.FC<TodoListProps> = ({ onDeleteTodo }) => {
 
   if (todos.length > 0) {
     todoContent = todos.map((todo: TodoItem) => (
-      <Card key={todo.id} sx={{ mb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Card key={todo.id} sx={{mb: 1}}>
+        <Box sx={{display: 'flex', alignItems: 'center'}}>
           <CardActionArea onClick={() => handleClickTodo(todo.id)}>
             <CardContent>
               <Typography variant="h5" component="div">
@@ -40,9 +46,9 @@ const TodoList: React.FC<TodoListProps> = ({ onDeleteTodo }) => {
             size="medium"
             color="primary"
             variant="outlined"
-            loading={deletingIds.includes(todo.id)}
+            loading={isDeleting}
             onClick={(e) => handleDeleteTodo(e, todo.id)}
-            loadingPosition="start"
+            LoadingPosition="start"
           >
             Remove
           </Button>
@@ -57,11 +63,10 @@ const TodoList: React.FC<TodoListProps> = ({ onDeleteTodo }) => {
     );
   }
 
-  console.log(deletingIds);
-  console.log(`deleting status: ${isLoading}`);
-
   return (
-    <>{todoContent}</>
+    <>
+      {todoContent}
+    </>
   );
 };
 
