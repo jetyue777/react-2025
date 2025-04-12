@@ -1,35 +1,35 @@
-import { useEffect } from 'react';
-import { Box, CircularProgress, Divider, Typography } from '@mui/material';
-import styles from './Todo.module.scss';
-import TodoForm from './TodoForm/TodoForm';
-import TodoList from './TodoList/TodoList';
-import TodoItemDetail from './TodoItemDetail/TodoItemDetail';
-import { useTodos, useTodoItem } from '../../hooks/useTodoQueries';
-import { useTodoStore } from '../../store/todoStore';
+// src/features/todos/Todo.tsx
+import { useEffect } from "react";
+import { Box, CircularProgress, Divider, Typography } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "../../shared/hooks/hooks";
+import { useGetTodosQuery, useGetTodoByIdQuery, useDeleteTodoMutation } from "../../api/todoApi";
+import TodoList from "./TodoList/TodoList.tsx";
+import TodoForm from "./TodoForm/TodoForm.tsx";
+import TodoItemDetail from "./TodoItemDetail/TodoItemDetail.tsx";
+import styles from "./Todo.module.scss";
 
 const Todo = () => {
-  const {
-    selectedTodoId,
-    setSelectedTodoId,
-    deletingIds
-  } = useTodoStore();
+  const dispatch = useAppDispatch();
+  const selectedTodoId = useAppSelector(state => state.todos.selectedTodoId);
 
+  // RTK Query hooks
   const {
     data: todos = [],
-    isLoading: loadingStatus,
-    isError: loadingFailed,
-    refetch
-  } = useTodos();
+    isLoading: isLoadingTodos,
+    isError: isTodosError
+  } = useGetTodosQuery();
 
   const {
-    data: todoItem,
-    isLoading: loadItemStatus
-  } = useTodoItem(selectedTodoId || '');
+    data: selectedTodo,
+    isLoading: isLoadingTodoItem
+  } = useGetTodoByIdQuery(selectedTodoId || '', {
+    skip: !selectedTodoId // Skip query if no ID is selected
+  });
+
+  const [deleteTodo] = useDeleteTodoMutation();
 
   const handleDeleteTodo = (id: string) => {
-    if (selectedTodoId === id) {
-      setSelectedTodoId(null);
-    }
+    deleteTodo(id);
   };
 
   let itemDetail;
@@ -40,19 +40,15 @@ const Todo = () => {
         Please select a Todo from list to view.
       </Typography>
     );
-  } else if (loadItemStatus) {
+  } else if (isLoadingTodoItem) {
     itemDetail = (
-      <Box sx={{ display: 'flex' }}>
-        <CircularProgress />
+      <Box sx={{display: 'flex'}}>
+        <CircularProgress/>
       </Box>
     );
-  } else if (todoItem) {
+  } else if (selectedTodo) {
     itemDetail = (
-      <TodoItemDetail
-        todoItem={todoItem}
-        onDeleteTodo={handleDeleteTodo}
-        deletingIds={deletingIds}
-      />
+      <TodoItemDetail todoItem={selectedTodo} />
     );
   }
 
@@ -62,14 +58,14 @@ const Todo = () => {
         <TodoForm />
         <Divider className={styles.divider} />
         <div>
-          {loadingStatus && <CircularProgress />}
-          {!loadingStatus && <TodoList onDeleteTodo={handleDeleteTodo} />}
-          {loadingFailed && (
-            <Typography color="error">Failed to load todos</Typography>
+          {isLoadingTodos && <CircularProgress />}
+          {!isLoadingTodos && !isTodosError && <TodoList onDeleteTodo={handleDeleteTodo} />}
+          {isTodosError && (
+            <Typography color="error">Failed to load todos.</Typography>
           )}
         </div>
       </div>
-      <Divider orientation="vertical" variant="middle" flexItem sx={{ mx: 3 }} />
+      <Divider orientation="vertical" variant="middle" flexItem sx={{mx: 3}} />
       <div>
         {itemDetail}
       </div>
