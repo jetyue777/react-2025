@@ -1,17 +1,19 @@
-// src/App.tsx
-import { Container, CssBaseline } from '@mui/material';
-import Header from './components/Header';
-import { Outlet } from 'react-router-dom';
+import React from 'react';
+import { QueryProvider } from './providers/QueryProvider';
+import { TodoList } from './components/TodoList';
+import { TodoDetail } from './components/TodoDetail';
 
-const App = () => {
+const App: React.FC = () => {
   return (
-    <>
-      <CssBaseline />
-      <Header />
-      <Container maxWidth="xl" sx={{ pt: 5 }}>
-        <Outlet />
-      </Container>
-    </>
+    <QueryProvider>
+      <div className="app-container">
+        <h1>Todo Application</h1>
+        <div className="app-content">
+          <TodoList />
+          <TodoDetail />
+        </div>
+      </div>
+    </QueryProvider>
   );
 };
 
