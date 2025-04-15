@@ -1,16 +1,12 @@
-// src/api/todoApi.ts
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { TodoItem } from '../shared/models/todo.interface';
+import { TodoItem } from '../../shared/models/todo.interface.ts';
 
-// Define the base URL as a constant for better maintainability
 const BASE_URL = 'https://react-architecture-todo-default-rtdb.firebaseio.com';
 
-// Define the shape of the response from Firebase
 interface FirebaseResponse {
   [key: string]: { description: string };
 }
 
-// Transform function to convert Firebase response to our TodoItem[] format
 const transformTodosResponse = (response: FirebaseResponse): TodoItem[] => {
   if (!response) return [];
 
@@ -24,63 +20,76 @@ const transformTodosResponse = (response: FirebaseResponse): TodoItem[] => {
   return mappedData;
 };
 
-// RTK Query API definition
 export const todoApi = createApi({
-  // Unique reducer path for this API slice
   reducerPath: 'todoApi',
-
-  // Base configuration for all requests
   baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
-
-  // Tag types for cache invalidation
   tagTypes: ['Todos', 'Todo'],
-
-  // Define API endpoints
+  keepUnusedDataFor: 60, // default is 60 seconds
+  refetchOnMountOrArgChange: true,
   endpoints: (builder) => ({
-    // Get all todos
     getTodos: builder.query<TodoItem[], void>({
-      query: () => `/todos.json`,
+      query: () => '/todos.json',
       transformResponse: transformTodosResponse,
-      providesTags: ['Todos']
+      keepUnusedDataFor: 60, // 60 seconds
+      providesTags: (result) =>
+        // Return both a collection tag and individual item tags
+        result
+          ? [
+            { type: 'Todos', id: 'LIST' },
+            ...result.map(({ id }) => ({ type: 'Todo', id }))
+          ]
+          : [{ type: 'Todos', id: 'LIST' }]
     }),
 
-    // Get a single todo
     getTodoById: builder.query<TodoItem, string>({
-      query: (id) => `/todos/${id}.json`,
-      transformResponse: (response: { description: string }, _, id) => ({
+      query: (id: string) => `/todos/${id}.json`,
+      transformResponse: (response: { description: string }, _, id: string) => ({
         id: id,
         description: response?.description
       }),
       providesTags: (_, __, id) => [{ type: 'Todo', id }]
     }),
 
-    // Add a new todo
-    addTodo: builder.mutation<{ name: string }, string>({
-      query: (description) => ({
+    addTodo: builder.mutation<string, string>({
+      query: (description: string) => ({
         url: '/todos.json',
         method: 'POST',
-        body: { description }
+        body: {description}
       }),
-      // Transform the returned Firebase key into our format
       transformResponse: (response: { name: string }) => response,
-      invalidatesTags: ['Todos']
+      // Only invalidate the list, not individual items
+      invalidatesTags: [{ type: 'Todos', id: 'LIST' }]
     }),
 
-    // Delete a todo
     deleteTodo: builder.mutation<void, string>({
-      query: (id) => ({
+      query: (id: string) => ({
         url: `/todos/${id}.json`,
         method: 'DELETE'
       }),
-      invalidatesTags: ['Todos']
+      // Invalidate both the list and the specific item
+      invalidatesTags: (_, __, id) => [
+        { type: 'Todos', id: 'LIST' },
+        { type: 'Todo', id }
+      ]
+    }),
+
+    // Adding an updateTodo mutation to show complete patterns
+    updateTodo: builder.mutation<void, TodoItem>({
+      query: ({ id, description }) => ({
+        url: `/todos/${id}.json`,
+        method: 'PATCH',
+        body: { description }
+      }),
+      // Only invalidate the specific item that was updated
+      invalidatesTags: (_, __, { id }) => [{ type: 'Todo', id }]
     })
   })
 });
 
-// Export auto-generated hooks
 export const {
   useGetTodosQuery,
   useGetTodoByIdQuery,
   useAddTodoMutation,
-  useDeleteTodoMutation
+  useDeleteTodoMutation,
+  useUpdateTodoMutation
 } = todoApi;
