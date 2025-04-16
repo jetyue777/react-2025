@@ -30,11 +30,21 @@ jest.mock('@ag-grid-community/react', () => ({
 }));
 
 // Mock the styled components
-jest.mock('styled-components', () => ({
-  div: jest.fn(props => <div {...props} />),
-  __esModule: true,
-  default: jest.fn(tag => tag)
-}));
+// After (corrected mock)
+jest.mock('styled-components', () => {
+  const styledMock = () => ({ className: 'mock-styled' });
+
+  // Add all HTML elements you use with styled
+  styledMock.div = jest.fn(() => 'div-component');
+  styledMock.header = jest.fn(() => 'header-component');
+  styledMock.section = jest.fn(() => 'section-component');
+  // Add any other elements your component uses with styled.
+
+  return {
+    __esModule: true,
+    default: styledMock
+  };
+});
 
 // Mock the ILSTDatePicker component
 jest.mock('components/USLiquidityDashboard/ILST/components/DatePicker/ILSTDatePicker', () => ({
