@@ -99,6 +99,13 @@ jest.mock('react-toastify', () => ({
   }
 }));
 
+// In your test file
+jest.mock('path/to/UserProfileStore', () => ({
+  ...jest.requireActual('path/to/UserProfileStore'),
+  getUserRoles: jest.fn().mockReturnValue(['USER', 'ADMIN']),
+  hasUserRole: jest.fn().mockReturnValue(true)
+}));
+
 // Mock fetch
 global.fetch = jest.fn();
 
