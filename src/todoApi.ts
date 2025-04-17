@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { TodoItem } from '../../shared/models/todo.interface.ts';
+import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
+import {TodoItem} from '../../shared/models/todo.interface.ts';
 
 const BASE_URL = 'https://react-architecture-todo-default-rtdb.firebaseio.com';
 
@@ -22,7 +22,7 @@ const transformTodosResponse = (response: FirebaseResponse): TodoItem[] => {
 
 export const todoApi = createApi({
   reducerPath: 'todoApi',
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
+  baseQuery: fetchBaseQuery({baseUrl: BASE_URL}),
   tagTypes: ['Todos', 'Todo'],
   keepUnusedDataFor: 60, // default is 60 seconds
   refetchOnMountOrArgChange: true,
@@ -35,10 +35,10 @@ export const todoApi = createApi({
         // Return both a collection tag and individual item tags
         result
           ? [
-            { type: 'Todos', id: 'LIST' },
-            ...result.map(({ id }) => ({ type: 'Todo', id }))
+            {type: 'Todos', id: 'LIST'},
+            ...result.map(({id}) => ({type: 'Todo', id}))
           ]
-          : [{ type: 'Todos', id: 'LIST' }]
+          : [{type: 'Todos', id: 'LIST'}]
     }),
 
     getTodoById: builder.query<TodoItem, string>({
@@ -47,7 +47,7 @@ export const todoApi = createApi({
         id: id,
         description: response?.description
       }),
-      providesTags: (_, __, id) => [{ type: 'Todo', id }]
+      providesTags: (_, __, id) => [{type: 'Todo', id}]
     }),
 
     addTodo: builder.mutation<string, string>({
@@ -58,7 +58,7 @@ export const todoApi = createApi({
       }),
       transformResponse: (response: { name: string }) => response,
       // Only invalidate the list, not individual items
-      invalidatesTags: [{ type: 'Todos', id: 'LIST' }]
+      invalidatesTags: [{type: 'Todos', id: 'LIST'}]
     }),
 
     deleteTodo: builder.mutation<void, string>({
@@ -68,20 +68,20 @@ export const todoApi = createApi({
       }),
       // Invalidate both the list and the specific item
       invalidatesTags: (_, __, id) => [
-        { type: 'Todos', id: 'LIST' },
-        { type: 'Todo', id }
+        {type: 'Todos', id: 'LIST'},
+        {type: 'Todo', id}
       ]
     }),
 
     // Adding an updateTodo mutation to show complete patterns
     updateTodo: builder.mutation<void, TodoItem>({
-      query: ({ id, description }) => ({
+      query: ({id, description}) => ({
         url: `/todos/${id}.json`,
         method: 'PATCH',
-        body: { description }
+        body: {description}
       }),
       // Only invalidate the specific item that was updated
-      invalidatesTags: (_, __, { id }) => [{ type: 'Todo', id }]
+      invalidatesTags: (_, __, {id}) => [{type: 'Todo', id}]
     })
   })
 });
